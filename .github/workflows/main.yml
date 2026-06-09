@@ -1,0 +1,29 @@
+name: Mobile Security Audit
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  static-analysis:
+    name: Run Static Application Security Testing (SAST)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep and Generate Report
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/src" returntocorp/semgrep semgrep ci \
+            --config=p/android \
+            --config=p/owasp-top-ten \
+            --text > security_audit_report.txt || true
+
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mobile-Security-Audit-Report
+          path: security_audit_report.txt
